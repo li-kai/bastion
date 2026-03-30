@@ -1,72 +1,55 @@
-# my-project
+# bastion
 
-Rust project template with [dylint] lints, Nix flake, direnv, clippy, and rustfmt pre-configured.
+Secure HTTP proxy for AI coding agents. Enforces egress policies and injects credentials for sandboxed agents — so agents never see secrets.
 
-## Quick start
+## How it works
 
-1. **Clone this template**, keeping git history for clean merges later:
-   ```sh
-   git clone <template-repo-url> my-project
-   cd my-project
-   git remote rename origin template
-   ```
-
-2. **Rename the package** — update `name` in `Cargo.toml`.
-
-3. **Enter the dev shell**:
-   ```sh
-   direnv allow   # if using direnv
-   nix develop    # otherwise
-   ```
-
-4. **Install the pre-commit hook**:
-   ```sh
-   git config core.hooksPath .githooks
-   ```
-
-5. **Build and test**:
-   ```sh
-   just build
-   just test
-   ```
-
-## What's included
-
-| File | Purpose |
-|------|---------|
-| `flake.nix` | Dev shell with Rust toolchain, cargo-dylint, and pre-built lints via `rust-lints.lib.mkDevShell` |
-| `.envrc` | Auto-activates the flake dev shell via direnv |
-| `rustfmt.toml` | Edition 2024, grouped imports |
-| `clippy.toml` | Allows `unwrap`/`expect` in tests |
-| `Cargo.toml [lints]` | Comprehensive clippy configuration |
-| `.githooks/pre-commit` | Auto-fix, format, lint, and banned crate detection |
-| `justfile` | Build, test, check, fix, fmt recipes |
-
-## Linting
-
-```sh
-just check      # clippy + dylint
-just fix        # auto-fix + format
+```
+┌──────────────────────────────┐
+│  Sandbox (VM / devcontainer) │
+│                              │
+│  AI Agent                    │
+│  - No credentials            │
+│  - All traffic via proxy     │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│  Bastion Proxy               │
+│                              │
+│  - TLS interception           │
+│  - SSRF protection           │
+│  - Egress allowlist          │
+│  - Credential injection      │
+│  - Audit logging             │
+└──────────────────────────────┘
 ```
 
-## Pre-commit hook
+Agents make normal HTTP/HTTPS requests. The proxy intercepts TLS, evaluates egress policy, injects credentials for authorized hosts, and blocks everything else.
 
-On every commit, the hook:
+## Key properties
 
-1. Auto-fixes all `MachineApplicable` clippy lints (fixed-point loop)
-2. Formats with `cargo fmt`
-3. Strips decorative comment dividers
-4. Re-stages fixed files
-5. Blocks on clippy, dylint, or test failures
-6. Rejects banned crates (lazy_static, once_cell, dashmap, openssl, etc.)
+- **Agents never see credentials** — no sealed secrets, no dummy tokens
+- **Defense in depth** — allowlists, SSRF protection, credential scoping, audit logging
+- **Library-first** — embeddable in orchestrators via Rust API
+- **Hot-reload** — zero-downtime config updates
 
-## Staying up to date
+## Configuration
 
-Merge template updates periodically:
+```toml
+[proxy]
+listen = "127.0.0.1:8080"
 
-```sh
-git fetch template
-git merge template/main
+[egress]
+default_policy = "block"
+passthrough_hosts = ["crates.io", "registry.npmjs.org"]
+blocked_hosts = ["pastebin.com"]
+
+[credentials.openai]
+preset = "openai"
+env = "OPENAI_API_KEY"
+
+[credentials.github]
+preset = "github"
+env = "GITHUB_TOKEN"
 ```
-
-[dylint]: https://github.com/trailofbits/dylint
