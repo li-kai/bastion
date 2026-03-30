@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
-name = "my-project"
+name = "bastion-cli"
+version = "0.1.0"
+dependencies = [
+ "bastion-core",
+]
+
+[[package]]
+name = "bastion-core"
 version = "0.1.0"

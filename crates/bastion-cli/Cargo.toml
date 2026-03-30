@@ -1,0 +1,10 @@
+[package]
+name = "bastion-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bastion-core = { path = "../bastion-core" }
+
+[lints]
+workspace = true
