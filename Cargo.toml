@@ -473,3 +473,22 @@ swap_ptr_to_ref = "allow"
 unnecessary_clippy_cfg = "allow"
 unnecessary_option_map_or_else = "allow"
 unnecessary_result_map_or_else = "allow"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+overflow-checks = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = "line-tables-only"
+strip = false
